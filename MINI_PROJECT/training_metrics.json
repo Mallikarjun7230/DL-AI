@@ -1,0 +1,45 @@
+{
+  "model_name": "Deep CNN (Conv2D x 4 + BatchNorm + Dropout)",
+  "train_samples": 60000,
+  "test_samples": 10000,
+  "test_accuracy": 0.9931,
+  "test_accuracy_percentage": "99.31%",
+  "test_loss": 0.02017,
+  "total_parameters": 272490,
+  "epochs_trained": 6,
+  "training_time_seconds": 439.33,
+  "history": {
+    "accuracy": [
+      0.938,
+      0.97992,
+      0.98397,
+      0.9862,
+      0.98867,
+      0.9895
+    ],
+    "val_accuracy": [
+      0.6506,
+      0.9907,
+      0.991,
+      0.9921,
+      0.9908,
+      0.9931
+    ],
+    "loss": [
+      0.20533,
+      0.06621,
+      0.05285,
+      0.04465,
+      0.03549,
+      0.03311
+    ],
+    "val_loss": [
+      0.9109,
+      0.02749,
+      0.02761,
+      0.02237,
+      0.02585,
+      0.02017
+    ]
+  }
+}

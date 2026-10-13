@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Neural MNIST — Real-Time Deep Digit Recognizer</title>
+  <meta name="description" content="Interactive MNIST Handwritten Digit Recognizer powered by a Deep Convolutional Neural Network with real-time canvas inference and center-of-mass centering.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+
+  <div class="app-container">
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="4" />
+            <path d="M7 8h10M7 12h4m-4 4h7" />
+          </svg>
+        </div>
+        <div class="brand-text">
+          <div class="title-row">
+            <h1>Neural MNIST</h1>
+            <span class="badge badge-accent">CNN v2.2</span>
+          </div>
+          <p class="subtitle">Deep Convolutional Neural Network • Real-Time Digit Classification</p>
+        </div>
+      </div>
+
+      <div class="header-metrics">
+        <div class="metric-chip">
+          <span class="chip-status-pulse"></span>
+          <span class="chip-label">Accuracy:</span>
+          <span class="chip-value" id="header-accuracy">99.2%</span>
+        </div>
+        <div class="metric-chip">
+          <span class="chip-icon">⚡</span>
+          <span class="chip-label">Latency:</span>
+          <span class="chip-value" id="header-latency">~12ms</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="workspace-grid">
+      <!-- Left Panel: Drawing Canvas -->
+      <section class="card canvas-card" id="canvas-section">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2 class="card-title">Interactive Canvas</h2>
+            <p class="card-desc">Draw any digit from 0 to 9. Prediction updates in real time.</p>
+          </div>
+          <button id="btn-sample" class="btn btn-secondary btn-sm" title="Load real test sample from MNIST dataset">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+            </svg>
+            Try Random MNIST Sample
+          </button>
+        </div>
+
+        <div class="canvas-wrapper">
+          <div class="canvas-frame">
+            <canvas id="drawing-canvas" width="300" height="300"></canvas>
+            <div class="canvas-grid-overlay" id="grid-overlay"></div>
+            <div class="canvas-hint" id="canvas-hint">Draw a digit here...</div>
+          </div>
+        </div>
+
+        <!-- Controls Toolbar -->
+        <div class="canvas-toolbar">
+          <div class="brush-controls">
+            <label for="brush-size" class="tool-label">Brush:</label>
+            <input type="range" id="brush-size" min="14" max="36" value="24" class="slider" />
+            <span class="brush-size-display" id="brush-val">24px</span>
+          </div>
+
+          <div class="toolbar-actions">
+            <button id="btn-eraser" class="btn btn-icon" title="Toggle Eraser Mode">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21" />
+                <path d="M22 21H7" />
+                <path d="m5 11 9 9" />
+              </svg>
+              <span class="btn-text">Eraser</span>
+            </button>
+            <button id="btn-clear" class="btn btn-danger" title="Clear Canvas (Hotkey: C)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+              </svg>
+              <span>Clear (C)</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Panel: Real-Time Predictions & Analysis -->
+      <section class="card predictions-card" id="prediction-section">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2 class="card-title">Real-Time Inference</h2>
+            <p class="card-desc">Softmax output probabilities across all 10 digits.</p>
+          </div>
+        </div>
+
+        <!-- Top Prediction Hero Box -->
+        <div class="prediction-hero" id="prediction-hero">
+          <div class="hero-left">
+            <div class="prediction-digit-container">
+              <span class="prediction-label">Prediction</span>
+              <div class="prediction-digit" id="predicted-digit">—</div>
+            </div>
+            <div class="prediction-meta">
+              <div class="confidence-badge" id="confidence-badge">
+                <span class="conf-title">Confidence</span>
+                <span class="conf-value" id="predicted-confidence">0.0%</span>
+              </div>
+              <div class="stat-pill" id="stat-latency">
+                <span>Inference:</span>
+                <strong id="latency-val">—</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Model's Eye (28x28 Preprocessed Tensor Preview) -->
+          <div class="hero-right">
+            <div class="tensor-preview-card">
+              <span class="tensor-label">Model's Eye (28×28)</span>
+              <div class="tensor-frame">
+                <img id="tensor-preview-img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='112' height='112'%3E%3Crect width='112' height='112' fill='%230b0f19'/%3E%3C/svg%3E" alt="Preprocessed 28x28 input" />
+              </div>
+              <span class="tensor-subtext">Center of Mass Centered</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Probability Distribution Bars -->
+        <div class="probability-distribution">
+          <div class="distribution-header">
+            <span>Digit Class</span>
+            <span>Probability Distribution</span>
+          </div>
+          <div class="prob-list" id="probability-list">
+            <!-- Dynamically populated 0-9 bars -->
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Model Insights & Architecture Footer Section -->
+    <footer class="model-info-section card">
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-label">Dataset</span>
+          <span class="info-value">MNIST 70k (60k Train / 10k Test)</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Neural Architecture</span>
+          <span class="info-value">4× Conv2D + BatchNorm + Dropout</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Input Representation</span>
+          <span class="info-value">28×28 Grayscale $[0.0, 1.0]$</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Centering Strategy</span>
+          <span class="info-value">BBox Aspect Ratio + Center of Mass</span>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
